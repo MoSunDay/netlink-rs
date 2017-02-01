@@ -7,3 +7,6 @@ netlink-rs/target/
 # More information here http://doc.crates.io/guide.html#cargotoml-vs-cargolock
 netlink-rs/Cargo.lock
 Cargo.lock
+
+# ignore idea 
+.idea/
