@@ -18,11 +18,11 @@ pub struct NetlinkAddr(sockaddr_nl);
 impl NetlinkAddr {
     pub fn new(pid: u32, groups: u32) -> NetlinkAddr {
         NetlinkAddr(sockaddr_nl {
-            nl_family: AF_NETLINK as sa_family_t,
-            nl_pad: 0,
-            nl_pid: pid,
-            nl_groups: groups,
-        })
+                        nl_family: AF_NETLINK as sa_family_t,
+                        nl_pad: 0,
+                        nl_pid: pid,
+                        nl_groups: groups,
+                    })
     }
 
     pub fn pid(&self) -> u32 {
@@ -35,9 +35,7 @@ impl NetlinkAddr {
 
     pub fn as_sockaddr(&self) -> sockaddr {
         let sa = self.0;
-        unsafe {
-            *(&sa as *const sockaddr_nl as *const sockaddr)
-        }
+        unsafe { *(&sa as *const sockaddr_nl as *const sockaddr) }
     }
 }
 
@@ -48,10 +46,8 @@ pub fn sockaddr_to_netlinkaddr(sa: &sockaddr) -> io::Result<NetlinkAddr> {
             let pid = snl.nl_pid;
             let groups = snl.nl_groups;
             Ok(NetlinkAddr::new(pid, groups))
-        },
-        _ => {
-            Err(io::Error::new(ErrorKind::InvalidInput, "sockaddr is not Netlink family"))
         }
+        _ => Err(io::Error::new(ErrorKind::InvalidInput, "sockaddr is not Netlink family")),
     }
 }
 

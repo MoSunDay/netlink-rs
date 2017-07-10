@@ -8,13 +8,13 @@ pub use self::msg::*;
 
 use socket::socket_impl::Socket as SocketImpl;
 
-use std::mem::{size_of};
+use std::mem::size_of;
 
 use libc::{AF_NETLINK, SOCK_RAW};
 
 use std::convert::Into;
 use std::io::{self, Write, Cursor};
-use std::iter::{repeat};
+use std::iter::repeat;
 
 use byteorder::{NativeEndian, WriteBytesExt, ReadBytesExt};
 
@@ -56,24 +56,20 @@ impl<'a> Payload<'a> {
 
     fn bytes(&self) -> io::Result<Vec<u8>> {
         match *self {
-            Payload::None => {
-                Ok(vec!())
-            },
-            Payload::Data(b) => {
-                Ok(b.into())
-            },
+            Payload::None => Ok(vec![]),
+            Payload::Data(b) => Ok(b.into()),
             Payload::Ack(h) => {
                 let mut vec = vec![];
                 try!(vec.write_u32::<NativeEndian>(0));
                 try!(vec.write(h.bytes()));
                 Ok(vec)
-            },
+            }
             Payload::Err(h) => {
                 let mut vec = vec![];
                 try!(vec.write_u32::<NativeEndian>(1));
                 try!(vec.write(h.bytes()));
                 Ok(vec)
-            },
+            }
         }
     }
 }
@@ -88,26 +84,23 @@ impl<'a> Msg<'a> {
     pub fn from_bytes(bytes: &'a [u8]) -> io::Result<(Msg<'a>, usize)> {
         let (hdr, n) = try!(NlMsgHeader::from_bytes(bytes));
         let (payload, n2) = match hdr.msg_type() {
-            MsgType::Done => {
-                (Payload::None, 0)
-            },
-            MsgType::Error => {
-                try!(Payload::nlmsg_error(&bytes[n..]))
-            },
+            MsgType::Done => (Payload::None, 0),
+            MsgType::Error => try!(Payload::nlmsg_error(&bytes[n..])),
             _ => {
                 let msg_len = hdr.msg_length() as usize - nlmsg_header_length();
                 try!(Payload::data(&bytes[n..], msg_len))
-            },
+            }
         };
 
-        Ok((Msg{
-            header: hdr,
-            payload: payload,
-        }, n + n2))
+        Ok((Msg {
+                header: hdr,
+                payload: payload,
+            },
+            n + n2))
     }
 
     pub fn new(hdr: NlMsgHeader, payload: Payload<'a>) -> Msg<'a> {
-        Msg{
+        Msg {
             header: hdr,
             payload: payload,
         }
@@ -139,7 +132,7 @@ impl<'a> Msg<'a> {
 // }
 
 pub struct Socket {
-    inner: SocketImpl,
+    pub inner: SocketImpl,
     buf: Vec<u8>,
 }
 
@@ -149,10 +142,7 @@ impl Socket {
         let bytes = 4096;
         let mut buf = Vec::with_capacity(bytes);
         buf.extend(repeat(0u8).take(bytes));
-        Ok(Socket {
-            inner: s,
-            buf: buf,
-        })
+        Ok(Socket { inner: s, buf: buf })
     }
 
     pub fn bind(&self, addr: NetlinkAddr) -> io::Result<()> {
@@ -163,22 +153,20 @@ impl Socket {
         self.inner.close()
     }
 
-    pub fn send<'a>(&self, message: Msg<'a>, addr: &NetlinkAddr)
-        -> io::Result<usize> {
-            let b = try!(message.bytes());
-            self.inner.sendto(b.as_slice(), 0, &addr.as_sockaddr())
+    pub fn send<'a>(&self, message: Msg<'a>, addr: &NetlinkAddr) -> io::Result<usize> {
+        let b = try!(message.bytes());
+        self.inner.sendto(b.as_slice(), 0, &addr.as_sockaddr())
+    }
+
+    pub fn send_multi<'a>(&self, messages: Vec<Msg<'a>>, addr: &NetlinkAddr) -> io::Result<usize> {
+        let mut bytes = vec![];
+        for m in messages {
+            let mut b = try!(m.bytes());
+            bytes.append(&mut b);
         }
 
-    pub fn send_multi<'a>(&self, messages: Vec<Msg<'a>>, addr: &NetlinkAddr)
-        -> io::Result<usize> {
-            let mut bytes = vec![];
-            for m in messages {
-                let mut b = try!(m.bytes());
-                bytes.append(&mut b);
-            }
-
-            self.inner.sendto(bytes.as_slice(), 0, &addr.as_sockaddr())
-        }
+        self.inner.sendto(bytes.as_slice(), 0, &addr.as_sockaddr())
+    }
 
     pub fn recv(&mut self) -> io::Result<(NetlinkAddr, Vec<Msg>)> {
         let buffer = &mut self.buf[..];
@@ -191,12 +179,10 @@ impl Socket {
             n += num_bytes;
             let t = msg.header().msg_type();
             match t {
-                MsgType::Done => {
-                    break
-                },
+                MsgType::Done => break,
                 _ => {
                     messages.push(msg);
-                },
+                }
             }
         }
 
@@ -244,7 +230,7 @@ mod tests {
         send.bind(send_addr).unwrap();
         recv.bind(recv_addr).unwrap();
 
-        let bytes = [0,1,2,3,4,5];
+        let bytes = [0, 1, 2, 3, 4, 5];
         let mut shdr = NlMsgHeader::request();
         shdr.data_length(6).seq(1).pid(102);
         let msg = Msg::new(shdr, Payload::Data(&bytes));
@@ -273,7 +259,7 @@ mod tests {
         send.bind(send_addr).unwrap();
         recv.bind(recv_addr).unwrap();
 
-        let bytes = [0,1,2,3,4,5];
+        let bytes = [0, 1, 2, 3, 4, 5];
         let mut shdr = NlMsgHeader::request();
         shdr.data_length(6).multipart().seq(1).pid(100);
         let msg = Msg::new(shdr, Payload::Data(&bytes));
@@ -284,7 +270,8 @@ mod tests {
         donehdr.pid(100);
         let donemsg = Msg::new(donehdr, Payload::None);
 
-        send.send_multi(vec![msg, msg2, donemsg], &recv_addr).unwrap();
+        send.send_multi(vec![msg, msg2, donemsg], &recv_addr)
+            .unwrap();
 
         let (ref addr, ref vec) = recv.recv().unwrap();
         assert_eq!(vec.len(), 2);
@@ -300,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_payload_decode() {
-        let bytes = [0,1,2,3,4,5];
+        let bytes = [0, 1, 2, 3, 4, 5];
         let (payload, n) = Payload::data(&bytes, bytes.len()).unwrap();
         assert_eq!(n, bytes.len());
 
@@ -360,13 +347,13 @@ mod tests {
         hdr.data_length(4).pid(9).seq(1).dump();
         let hdr_bytes = hdr.bytes();
 
-        let data = [0,1,2,3];
+        let data = [0, 1, 2, 3];
 
         let mut bytes = vec![];
         bytes.write(&hdr_bytes).unwrap();
         bytes.write(&data).unwrap();
         // Random data
-        bytes.write(&[1,1,1,1,1,1,1]).unwrap();
+        bytes.write(&[1, 1, 1, 1, 1, 1, 1]).unwrap();
 
         let (msg, n) = Msg::from_bytes(&bytes).unwrap();
         assert_eq!(n, hdr_bytes.len() + data.len());

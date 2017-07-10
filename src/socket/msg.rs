@@ -1,6 +1,6 @@
 use super::{nlmsg_length, nlmsg_header_length};
-use std::mem::{size_of};
-use std::slice::{from_raw_parts};
+use std::mem::size_of;
+use std::slice::from_raw_parts;
 use std::io::{self, ErrorKind, Cursor};
 
 use byteorder::{NativeEndian, ReadBytesExt};
@@ -69,10 +69,10 @@ impl Into<u16> for Flags {
     fn into(self) -> u16 {
         use self::Flags::*;
         match self {
-            Request =>  1,
-            Multi   =>  2,
-            Ack     =>  4,
-            Echo    =>  8,
+            Request => 1,
+            Multi => 2,
+            Ack => 4,
+            Echo => 8,
         }
     }
 }
@@ -94,10 +94,10 @@ impl Into<u16> for GetFlags {
     fn into(self) -> u16 {
         use self::GetFlags::*;
         match self {
-            Root    =>  0x100,
-            Match   =>  0x200,
-            Atomic  =>  0x400,
-            Dump    =>  0x100 | 0x200,
+            Root => 0x100,
+            Match => 0x200,
+            Atomic => 0x400,
+            Dump => 0x100 | 0x200,
         }
     }
 }
@@ -119,10 +119,10 @@ impl Into<u16> for NewFlags {
     fn into(self) -> u16 {
         use self::NewFlags::*;
         match self {
-            Replace =>  0x100,
-            Excl    =>  0x200,
-            Create  =>  0x400,
-            Append  =>  0x800,
+            Replace => 0x100,
+            Excl => 0x200,
+            Create => 0x400,
+            Append => 0x800,
         }
     }
 }
@@ -195,15 +195,17 @@ impl NlMsgHeader {
         let pid = try!(cursor.read_u32::<NativeEndian>());
 
         if len < nlmsg_header_length() as u32 {
-            Err(io::Error::new(ErrorKind::InvalidInput, "length smaller than msg header size"))
+            Err(io::Error::new(ErrorKind::InvalidInput,
+                               "length smaller than msg header size"))
         } else {
-            Ok((NlMsgHeader{
-                msg_length: len,
-                nl_type: nl_type,
-                flags: flags,
-                seq: seq,
-                pid: pid,
-            }, cursor.position() as usize))
+            Ok((NlMsgHeader {
+                    msg_length: len,
+                    nl_type: nl_type,
+                    flags: flags,
+                    seq: seq,
+                    pid: pid,
+                },
+                cursor.position() as usize))
         }
     }
 
