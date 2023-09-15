@@ -233,19 +233,19 @@ impl NlMsgHeader {
 
     /// Multipart message
     pub fn multipart(&mut self) -> &mut NlMsgHeader {
-        self.flags |= Flags::Multi.into();
+        self.flags |= <Flags as Into<u16>>::into(Flags::Multi);
         self
     }
 
     /// Request acknowledgement
     pub fn ack(&mut self) -> &mut NlMsgHeader {
-        self.flags |= Flags::Ack.into();
+        self.flags |= <Flags as Into<u16>>::into(Flags::Ack);
         self
     }
 
     /// Echo message
     pub fn echo(&mut self) -> &mut NlMsgHeader {
-        self.flags |= Flags::Echo.into();
+        self.flags |= <Flags as Into<u16>>::into(Flags::Echo);
         self
     }
 
@@ -263,49 +263,49 @@ impl NlMsgHeader {
 
     /// Override existing
     pub fn replace(&mut self) -> &mut NlMsgHeader {
-        self.flags |= NewFlags::Replace.into();
+        self.flags |= <NewFlags as Into<u16>>::into(NewFlags::Replace);
         self
     }
 
     /// Do not touch, if it exists
     pub fn excl(&mut self) -> &mut NlMsgHeader {
-        self.flags |= NewFlags::Excl.into();
+        self.flags |= <NewFlags as Into<u16>>::into(NewFlags::Excl);
         self
     }
 
     /// Create, if it does not exist
     pub fn create(&mut self) -> &mut NlMsgHeader {
-        self.flags |= NewFlags::Create.into();
+        self.flags |= <NewFlags as Into<u16>>::into(NewFlags::Create);
         self
     }
 
     /// Add to end of list
     pub fn append(&mut self) -> &mut NlMsgHeader {
-        self.flags |= NewFlags::Append.into();
+        self.flags |= <NewFlags as Into<u16>>::into(NewFlags::Append);
         self
     }
 
     /// specify tree root
     pub fn root(&mut self) -> &mut NlMsgHeader {
-        self.flags |= GetFlags::Root.into();
+        self.flags |= <GetFlags as Into<u16>>::into(GetFlags::Root);
         self
     }
 
     /// return all matching
     pub fn match_provided(&mut self) -> &mut NlMsgHeader {
-        self.flags |= GetFlags::Match.into();
+        self.flags |= <GetFlags as Into<u16>>::into(GetFlags::Match);
         self
     }
 
     /// atomic GET
     pub fn atomic(&mut self) -> &mut NlMsgHeader {
-        self.flags |= GetFlags::Atomic.into();
+        self.flags |= <GetFlags as Into<u16>>::into(GetFlags::Atomic);
         self
     }
 
     /// (Root|Match)
     pub fn dump(&mut self) -> &mut NlMsgHeader {
-        self.flags |= GetFlags::Dump.into();
+        self.flags |= <GetFlags as Into<u16>>::into(GetFlags::Dump);
         self
     }
 }
